@@ -27,6 +27,36 @@ async function run() {
 
     const toysCollection = client.db("offRoadExplorer").collection("toys");
 
+    // Creating index on two fields
+    const indexKeys = { title: 1, "toys.name": 1 };
+    const indexOptions = { name: "titleToysName" };
+
+    try {
+      const result = await toysCollection.createIndex(indexKeys, indexOptions);
+      console.log("Index created successfully:", result);
+    } catch (error) {
+      console.error("Error creating index:", error);
+    }
+
+    app.get("/toySearch/:text", async (req, res) => {
+      const searchText = req.params.text;
+      try {
+        const result = await toysCollection
+          .find({
+            $or: [
+              { title: { $regex: searchText, $options: "i" } },
+              { "toys.name": { $regex: searchText, $options: "i" } },
+            ],
+          })
+          .toArray();
+        console.log(result);
+        res.json(result);
+      } catch (error) {
+        console.error("Error executing search query:", error);
+        res.status(500).json({ error: "An error occurred during search." });
+      }
+    });
+
     // toys
     //     app.get("/toys", async (req, res) => {
     //   const { search } = req.query;
@@ -37,14 +67,26 @@ async function run() {
     // });
 
     app.get("/toys", async (req, res) => {
+      const cursor = toysCollection.find().limit(3);
+      const result = await cursor.toArray();
+      res.json(result);
+    });
+
+    app.get("/allToys", async (req, res) => {
       const cursor = toysCollection.find();
       const result = await cursor.toArray();
       res.json(result);
     });
 
+    app.get("/myToys/:email", async (req, res) => {
+      const result = await toysCollection
+        .find({ sellerEmail: req.params.email })
+        .toArray();
+      res.json(result);
+    });
+
     app.post("/toys", async (req, res) => {
       const newToy = req.body;
-      console.log(newToy);
       const result = await toysCollection.insertOne(newToy);
       res.json(result);
     });
