@@ -72,6 +72,20 @@ async function run() {
     app.get("/allToys", async (req, res) => {
       const cursor = toysCollection.find();
       const result = await cursor.toArray();
+
+      // Extract the first 20 toys from the result
+      const limitedResult = result.map((category) => ({
+        ...category,
+        toys: category.toys.slice(0, 20),
+      }));
+
+      res.json(limitedResult);
+    });
+
+    app.get("/allToys/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await toysCollection.findOne(query);
       res.json(result);
     });
 
