@@ -75,10 +75,28 @@ async function run() {
       res.json(result);
     });
 
-    app.get("/myToys/:email", async (req, res) => {
+    app.get("/allToys/:email", async (req, res) => {
       const result = await toysCollection
         .find({ sellerEmail: req.params.email })
         .toArray();
+      res.json(result);
+    });
+
+    app.put("/allToys/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updatedToy = req.body;
+      const toys = {
+        $set: {
+          title: updatedToy.title,
+          "toys.0.name": updatedToy.toys[0].name,
+          "toys.0.price": updatedToy.toys[0].price,
+          "toys.0.quantity": updatedToy.toys[0].quantity,
+          "toys.0.details": updatedToy.toys[0].details,
+        },
+      };
+      const result = await toysCollection.updateOne(filter, toys, options);
       res.json(result);
     });
 
