@@ -89,7 +89,7 @@ async function run() {
       res.json(result);
     });
 
-    app.get("/allToys/:email", async (req, res) => {
+    app.get("/myToys/:email", async (req, res) => {
       const result = await toysCollection
         .find({ sellerEmail: req.params.email })
         .toArray();
